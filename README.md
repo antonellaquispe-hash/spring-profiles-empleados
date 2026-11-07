@@ -86,3 +86,9 @@ Las pruebas de controlador validan las rutas CRUD y la respuesta de configuraci�
 5. Probar tanto las respuestas REST como el arranque con bases de datos reales ayuda a detectar errores de configuración antes del despliegue.
 
 
+
+
+## Pruebas Postman
+
+Importa la colección postman/Empleados.postman_collection.json y el environment que corresponde al perfil desde postman/environments. Ejecuta la colección en orden para que el ID creado se use en lectura, actualización y eliminación. La guía detallada está en postman/README.md.
+

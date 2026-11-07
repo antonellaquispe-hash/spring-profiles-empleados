@@ -1,19 +1,21 @@
 {
   "info": {
     "name": "Empleados Spring Profiles",
-    "description": "CRUD y consulta de configuración. Cambia la variable baseUrl según el perfil activo.",
+    "description": "Prueba el CRUD y la configuración del perfil. Ejecuta la colección en orden para crear, consultar, actualizar y eliminar el mismo empleado.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8080" },
-    { "key": "empleadoId", "value": "1" }
+    { "key": "empleadoId", "value": "" }
   ],
   "item": [
-    { "name": "Configuración activa", "request": { "method": "GET", "url": "{{baseUrl}}/configuracion" } },
-    { "name": "Crear empleado", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Pérez\",\n  \"email\": \"ana@example.com\",\n  \"sueldo\": 2500.00\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/empleados" } },
-    { "name": "Listar empleados", "request": { "method": "GET", "url": "{{baseUrl}}/empleados" } },
-    { "name": "Consultar empleado", "request": { "method": "GET", "url": "{{baseUrl}}/empleados/{{empleadoId}}" } },
-    { "name": "Actualizar empleado", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombres\": \"Ana María\",\n  \"apellidos\": \"Pérez\",\n  \"email\": \"ana@example.com\",\n  \"sueldo\": 2700.00\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/empleados/{{empleadoId}}" } },
-    { "name": "Eliminar empleado", "request": { "method": "DELETE", "url": "{{baseUrl}}/empleados/{{empleadoId}}" } }
+    { "name": "1. Ver configuración", "request": { "method": "GET", "url": "{{baseUrl}}/configuracion" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "const c = pm.response.json();", "pm.test('Incluye ambiente, perfil, puerto y base de datos', () => {", "  pm.expect(c).to.have.all.keys('ambiente', 'perfil', 'puerto', 'baseDatos');", "  pm.expect(c.perfil).to.be.oneOf(['dev', 'qa', 'test', 'prod']);", "});", "pm.test('El puerto corresponde al perfil', () => {", "  const puertos = { dev: '8080', qa: '8082', test: '8084', prod: '8086' };", "  pm.expect(c.puerto).to.eql(puertos[c.perfil]);", "});"] } }] },
+    { "name": "2. Crear empleado", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Pérez\",\n  \"email\": \"ana@example.com\",\n  \"sueldo\": 2500.00\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/empleados" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 201 Created', () => pm.response.to.have.status(201));", "const empleado = pm.response.json();", "pm.expect(empleado.id).to.exist;", "pm.collectionVariables.set('empleadoId', empleado.id.toString());", "pm.test('Empleado creado con los datos enviados', () => pm.expect(empleado.email).to.eql('ana@example.com'));"] } }] },
+    { "name": "3. Listar empleados", "request": { "method": "GET", "url": "{{baseUrl}}/empleados" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "const empleados = pm.response.json();", "pm.test('La respuesta es una lista', () => pm.expect(empleados).to.be.an('array'));", "pm.test('Incluye el empleado creado', () => pm.expect(empleados.some(e => e.id.toString() === pm.collectionVariables.get('empleadoId'))).to.eql(true));"] } }] },
+    { "name": "4. Consultar empleado", "request": { "method": "GET", "url": "{{baseUrl}}/empleados/{{empleadoId}}" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.test('Devuelve el ID solicitado', () => pm.expect(pm.response.json().id.toString()).to.eql(pm.collectionVariables.get('empleadoId')));"] } }] },
+    { "name": "5. Actualizar empleado", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nombres\": \"Ana María\",\n  \"apellidos\": \"Pérez\",\n  \"email\": \"ana@example.com\",\n  \"sueldo\": 2700.00\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/empleados/{{empleadoId}}" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.test('Sueldo actualizado', () => pm.expect(pm.response.json().sueldo).to.eql(2700));"] } }] },
+    { "name": "6. Eliminar empleado", "request": { "method": "DELETE", "url": "{{baseUrl}}/empleados/{{empleadoId}}" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 204 No Content', () => pm.response.to.have.status(204));"] } }] },
+    { "name": "7. Error 404 después de eliminar", "request": { "method": "GET", "url": "{{baseUrl}}/empleados/{{empleadoId}}" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 404 Not Found', () => pm.response.to.have.status(404));"] } }] },
+    { "name": "8. Error 400 por datos inválidos", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/empleados" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 400 Bad Request', () => pm.response.to.have.status(400));"] } }] }
   ]
 }
